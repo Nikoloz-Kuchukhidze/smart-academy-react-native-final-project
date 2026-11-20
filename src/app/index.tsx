@@ -1,98 +1,293 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Link, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import * as yup from "yup";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { colors } from "@/constants/theme";
+import { useShop } from "@/context/shop-context";
+import {
+  ActionButton,
+  Brand,
+  RememberToggle,
+  SafeScreen,
+  StorageNotice,
+} from "@/components/shop-ui";
+import { TextField } from "@/components/text-field";
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+const loginSchema = yup.object({
+  email: yup
+    .string()
+    .trim()
+    .email("Enter a valid email address.")
+    .required("Email is required."),
+  password: yup
+    .string()
+    .required("Password is required.")
+    .min(8, "Use at least 8 characters."),
+});
+
+type LoginValues = yup.InferType<typeof loginSchema>;
+
+export default function LoginScreen() {
+  const router = useRouter();
+  const { isReady, user, signIn } = useShop();
+  const [remember, setRemember] = useState(true);
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<LoginValues>({
+    resolver: yupResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  useEffect(() => {
+    if (isReady && user) {
+      router.replace("/products");
+    }
+  }, [isReady, router, user]);
+
+  const onSubmit = handleSubmit(async ({ email }) => {
+    const name = email.split("@")[0].replace(/[._-]/g, " ");
+    try {
+      await signIn({ name: name || "Friend", email }, remember);
+      router.replace("/products");
+    } catch {
+      // The provider exposes storage failures in the notice above the form.
+    }
+  });
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <SafeScreen>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.topBar}>
+            <Brand />
+            <Text style={styles.topNote}>GOOD THINGS, DAILY</Text>
+          </View>
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+          <View style={styles.hero}>
+            <View style={styles.heroPill}>
+              <View style={styles.heroDot} />
+              <Text style={styles.heroPillText}>A LITTLE MORE INTENTIONAL</Text>
+            </View>
+            <Text style={styles.title}>
+              Make room for{"\n"}
+              <Text style={styles.titleAccent}>the good stuff.</Text>
+            </Text>
+            <Text style={styles.subtitle}>
+              Thoughtful finds for home, work, and everywhere in between.
+            </Text>
+          </View>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+          <View style={styles.formCard}>
+            <Text style={styles.formTitle}>Welcome back</Text>
+            <Text style={styles.formSubtitle}>Sign in to pick up where you left off.</Text>
+            <StorageNotice />
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+            <View style={styles.fields}>
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value }, fieldState }) => (
+                  <TextField
+                    label="Email address"
+                    placeholder="you@example.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={fieldState.error?.message}
+                  />
+                )}
+              />
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, onBlur, value }, fieldState }) => (
+                  <TextField
+                    label="Password"
+                    placeholder="At least 8 characters"
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoComplete="password"
+                    textContentType="password"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={fieldState.error?.message}
+                  />
+                )}
+              />
+              <RememberToggle
+                checked={remember}
+                onPress={() => setRemember((current) => !current)}
+              />
+              <ActionButton
+                title={isSubmitting ? "Signing in..." : "Sign in"}
+                onPress={() => void onSubmit()}
+                disabled={isSubmitting || !isReady}
+              />
+            </View>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+            <View style={styles.footerRow}>
+              <Text style={styles.footerText}>New around here? </Text>
+              <Link href="/register" style={styles.link}>
+                Create an account
+              </Link>
+            </View>
+            <Text style={styles.demoNote}>
+              Demo store · Sign-in details are not sent to a server.
+            </Text>
+          </View>
+          <Text style={styles.guestText}>
+            Want a look around?{" "}
+            <Text
+              accessibilityRole="link"
+              onPress={() => router.push("/products")}
+              style={styles.link}
+            >
+              Browse as a guest
+            </Text>
+          </Text>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  flex: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 28,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 36,
+  },
+  topNote: {
+    color: colors.muted,
+    fontSize: 9,
+    letterSpacing: 1.4,
+    fontWeight: "700",
+  },
+  hero: {
+    marginBottom: 26,
+  },
+  heroPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 8,
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.pale,
+    marginBottom: 15,
+  },
+  heroDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.green,
+  },
+  heroPillText: {
+    color: colors.greenDark,
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 0.9,
   },
   title: {
-    textAlign: 'center',
+    color: colors.ink,
+    fontSize: 39,
+    lineHeight: 44,
+    fontWeight: "700",
+    letterSpacing: -1.7,
   },
-  code: {
-    textTransform: 'uppercase',
+  titleAccent: {
+    color: colors.green,
+    fontStyle: "italic",
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  subtitle: {
+    maxWidth: 310,
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: 12,
+  },
+  formCard: {
+    borderRadius: 25,
+    padding: 21,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  formTitle: {
+    color: colors.ink,
+    fontSize: 21,
+    fontWeight: "700",
+    letterSpacing: -0.5,
+  },
+  formSubtitle: {
+    color: colors.muted,
+    fontSize: 13,
+    marginTop: 5,
+    marginBottom: 18,
+  },
+  fields: {
+    gap: 15,
+  },
+  footerRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 20,
+  },
+  footerText: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+  link: {
+    color: colors.green,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  demoNote: {
+    textAlign: "center",
+    color: colors.muted,
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 14,
+  },
+  guestText: {
+    color: colors.muted,
+    fontSize: 13,
+    textAlign: "center",
+    marginTop: 20,
   },
 });
