@@ -62,18 +62,20 @@ npm run web            # start directly in the browser
 
 ## Demo barcodes
 
-Every product has a demo EAN-13 barcode. Generate any of these codes with a barcode generator and scan it from the **Scan** button on the catalog screen.
+Every product has a demo EAN-13 barcode. To try the scanner, open this README on another screen (or print it), tap the **Scan** button on the catalog screen, and point the camera at a barcode below. The app opens that product's page.
 
-| Product | Category | Price | Barcode |
-| --- | --- | ---: | --- |
-| Arc table lamp | Home | $68 | `2000000000015` |
-| Studio headphones | Tech | $124 | `2000000000022` |
-| Daily canvas tote | Style | $32 | `2000000000039` |
-| Pour-over set | Home | $46 | `2000000000046` |
-| Weekender bottle | Style | $28 | `2000000000053` |
-| Pocket speaker | Tech | $84 | `2000000000060` |
-| Soft cotton throw | Home | $58 | `2000000000077` |
-| Field notebook set | Style | $18 | `2000000000084` |
+| Product | Category | Price | Scan me |
+| --- | --- | ---: | :---: |
+| Arc table lamp | Home | $68 | <img src="docs/barcodes/arc-lamp.svg" width="180" alt="EAN-13 barcode 2000000000015" /> |
+| Studio headphones | Tech | $124 | <img src="docs/barcodes/studio-headphones.svg" width="180" alt="EAN-13 barcode 2000000000022" /> |
+| Daily canvas tote | Style | $32 | <img src="docs/barcodes/daily-tote.svg" width="180" alt="EAN-13 barcode 2000000000039" /> |
+| Pour-over set | Home | $46 | <img src="docs/barcodes/pour-over.svg" width="180" alt="EAN-13 barcode 2000000000046" /> |
+| Weekender bottle | Style | $28 | <img src="docs/barcodes/weekender-bottle.svg" width="180" alt="EAN-13 barcode 2000000000053" /> |
+| Pocket speaker | Tech | $84 | <img src="docs/barcodes/pocket-speaker.svg" width="180" alt="EAN-13 barcode 2000000000060" /> |
+| Soft cotton throw | Home | $58 | <img src="docs/barcodes/soft-throw.svg" width="180" alt="EAN-13 barcode 2000000000077" /> |
+| Field notebook set | Style | $18 | <img src="docs/barcodes/field-notebook.svg" width="180" alt="EAN-13 barcode 2000000000084" /> |
+
+The barcodes are SVG files in [`docs/barcodes/`](docs/barcodes/), each on a white background so it still scans when the README is shown in dark mode. The scanner also shows a demo barcode hint at the bottom of the camera view.
 
 ## Project structure
 
