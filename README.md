@@ -16,6 +16,7 @@ Use the Expo CLI prompts to open the app on a device, emulator, or web browser.
 - Sign-in and registration forms validated with Yup and React Hook Form.
 - Remember-me saves only the demo profile on the device; passwords are never stored.
 - Searchable, filterable sample catalog with product detail pages.
+- Camera-permission barcode scanning opens matching product details.
 - Shopping bag quantities and items persist locally with AsyncStorage.
 - Checkout is a demo interaction and does not collect payment.
 
