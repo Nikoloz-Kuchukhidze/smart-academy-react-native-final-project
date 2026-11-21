@@ -1,4 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import * as LocalAuthentication from "expo-local-authentication";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -6,6 +7,7 @@ import * as yup from "yup";
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,6 +19,7 @@ import { useShop } from "@/context/shop-context";
 import {
   ActionButton,
   Brand,
+  BiometricIcon,
   RememberToggle,
   SafeScreen,
   StorageNotice,
@@ -41,6 +44,10 @@ export default function LoginScreen() {
   const router = useRouter();
   const { isReady, user, signIn } = useShop();
   const [remember, setRemember] = useState(true);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricMethod, setBiometricMethod] = useState("biometrics");
+  const [isBiometricSigningIn, setIsBiometricSigningIn] = useState(false);
+  const [biometricError, setBiometricError] = useState<string | null>(null);
   const {
     control,
     handleSubmit,
@@ -51,10 +58,76 @@ export default function LoginScreen() {
   });
 
   useEffect(() => {
-    if (isReady && user) {
-      router.replace("/products");
+    let active = true;
+    const checkBiometrics = async () => {
+      if (!isReady || !user || Platform.OS === "web") {
+        setBiometricAvailable(false);
+        return;
+      }
+
+      try {
+        const [hasHardware, isEnrolled, supportedTypes] = await Promise.all([
+          LocalAuthentication.hasHardwareAsync(),
+          LocalAuthentication.isEnrolledAsync(),
+          LocalAuthentication.supportedAuthenticationTypesAsync(),
+        ]);
+        if (active) {
+          const hasFingerprint = supportedTypes.includes(
+            LocalAuthentication.AuthenticationType.FINGERPRINT,
+          );
+          const hasFaceRecognition = supportedTypes.includes(
+            LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION,
+          );
+          setBiometricMethod(
+            hasFingerprint
+              ? "fingerprint"
+              : hasFaceRecognition && Platform.OS === "ios"
+                ? "Face ID"
+                : "biometrics",
+          );
+          setBiometricAvailable(hasHardware && isEnrolled && supportedTypes.length > 0);
+        }
+      } catch (error) {
+        console.error("Could not check device biometrics.", error);
+        if (active) {
+          setBiometricError("Biometric sign-in is unavailable. Use your password instead.");
+          setBiometricAvailable(false);
+        }
+      }
+    };
+
+    void checkBiometrics();
+    return () => {
+      active = false;
+    };
+  }, [isReady, user]);
+
+  const signInWithBiometrics = async () => {
+    setIsBiometricSigningIn(true);
+    setBiometricError(null);
+    try {
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Sign in to Morrow",
+        cancelLabel: "Use password",
+        disableDeviceFallback: true,
+        biometricsSecurityLevel: "strong",
+      });
+      if (result.success) {
+        router.replace("/products");
+      } else if (
+        result.error !== "user_cancel" &&
+        result.error !== "system_cancel" &&
+        result.error !== "app_cancel"
+      ) {
+        setBiometricError("Biometric check failed. Try again or use your password.");
+      }
+    } catch (error) {
+      console.error("Biometric sign-in failed.", error);
+      setBiometricError("Biometric sign-in is unavailable. Use your password instead.");
+    } finally {
+      setIsBiometricSigningIn(false);
     }
-  }, [isReady, router, user]);
+  };
 
   const onSubmit = handleSubmit(async ({ email }) => {
     const name = email.split("@")[0].replace(/[._-]/g, " ");
@@ -97,11 +170,48 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.formCard}>
-            <Text style={styles.formTitle}>Welcome back</Text>
-            <Text style={styles.formSubtitle}>Sign in to pick up where you left off.</Text>
+            <Text style={styles.formTitle}>
+              {user ? `Welcome back, ${user.name}.` : "Welcome back"}
+            </Text>
+            <Text style={styles.formSubtitle}>
+              {user
+                ? "Use biometrics or sign in with your password."
+                : "Sign in to pick up where you left off."}
+            </Text>
             <StorageNotice />
 
             <View style={styles.fields}>
+              {user && biometricAvailable ? (
+                <View style={styles.biometricSection}>
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={isBiometricSigningIn}
+                    onPress={() => void signInWithBiometrics()}
+                    style={({ pressed }) => [
+                      styles.biometricButton,
+                      pressed && !isBiometricSigningIn && styles.biometricPressed,
+                    ]}
+                  >
+                    <BiometricIcon />
+                    <Text style={styles.biometricButtonText}>
+                      {isBiometricSigningIn
+                        ? "Checking..."
+                        : `Continue with ${biometricMethod}`}
+                    </Text>
+                  </Pressable>
+                  {biometricError ? (
+                    <Text accessibilityRole="alert" style={styles.biometricError}>
+                      {biometricError}
+                    </Text>
+                  ) : null}
+                  <Text style={styles.orText}>OR SIGN IN WITH EMAIL</Text>
+                </View>
+              ) : null}
+              {biometricError && !biometricAvailable ? (
+                <Text accessibilityRole="alert" style={styles.biometricError}>
+                  {biometricError}
+                </Text>
+              ) : null}
               <Controller
                 control={control}
                 name="email"
@@ -262,6 +372,41 @@ const styles = StyleSheet.create({
   },
   fields: {
     gap: 15,
+  },
+  biometricSection: {
+    gap: 12,
+    marginBottom: 2,
+  },
+  biometricButton: {
+    minHeight: 52,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.pale,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  biometricPressed: {
+    opacity: 0.75,
+  },
+  biometricButtonText: {
+    color: colors.greenDark,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  biometricError: {
+    color: colors.danger,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  orText: {
+    color: colors.muted,
+    textAlign: "center",
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 1,
   },
   footerRow: {
     flexDirection: "row",

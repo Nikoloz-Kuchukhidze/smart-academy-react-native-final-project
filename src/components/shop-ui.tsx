@@ -58,6 +58,26 @@ export function BarcodeScanIcon({
   );
 }
 
+export function BiometricIcon({
+  size = 22,
+  color = colors.greenDark,
+}: {
+  size?: number;
+  color?: string;
+}) {
+  return (
+    <SymbolView
+      name={{
+        ios: "touchid",
+        android: "fingerprint",
+        web: "fingerprint",
+      }}
+      size={size}
+      tintColor={color}
+    />
+  );
+}
+
 type ButtonProps = PressableProps & {
   title: string;
   variant?: "primary" | "secondary" | "plain";
