@@ -1,4 +1,5 @@
 import type { PropsWithChildren, ReactNode } from "react";
+import { SymbolView } from "expo-symbols";
 import {
   Pressable,
   SafeAreaView,
@@ -34,6 +35,26 @@ export function Brand({ inverse = false }: { inverse?: boolean }) {
         morrow
       </Text>
     </View>
+  );
+}
+
+export function BarcodeScanIcon({
+  size = 22,
+  color = colors.greenDark,
+}: {
+  size?: number;
+  color?: string;
+}) {
+  return (
+    <SymbolView
+      name={{
+        ios: "barcode.viewfinder",
+        android: "barcode_scanner",
+        web: "barcode_scanner",
+      }}
+      size={size}
+      tintColor={color}
+    />
   );
 }
 

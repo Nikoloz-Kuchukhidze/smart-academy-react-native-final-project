@@ -1,5 +1,6 @@
 export type Product = {
   id: string;
+  barcode: string;
   name: string;
   category: "Home" | "Tech" | "Style";
   price: number;
@@ -13,6 +14,7 @@ export type Product = {
 export const products: Product[] = [
   {
     id: "arc-lamp",
+    barcode: "2000000000015",
     name: "Arc table lamp",
     category: "Home",
     price: 68,
@@ -25,6 +27,7 @@ export const products: Product[] = [
   },
   {
     id: "studio-headphones",
+    barcode: "2000000000022",
     name: "Studio headphones",
     category: "Tech",
     price: 124,
@@ -37,6 +40,7 @@ export const products: Product[] = [
   },
   {
     id: "daily-tote",
+    barcode: "2000000000039",
     name: "Daily canvas tote",
     category: "Style",
     price: 32,
@@ -48,6 +52,7 @@ export const products: Product[] = [
   },
   {
     id: "pour-over",
+    barcode: "2000000000046",
     name: "Pour-over set",
     category: "Home",
     price: 46,
@@ -59,6 +64,7 @@ export const products: Product[] = [
   },
   {
     id: "weekender-bottle",
+    barcode: "2000000000053",
     name: "Weekender bottle",
     category: "Style",
     price: 28,
@@ -70,6 +76,7 @@ export const products: Product[] = [
   },
   {
     id: "pocket-speaker",
+    barcode: "2000000000060",
     name: "Pocket speaker",
     category: "Tech",
     price: 84,
@@ -81,6 +88,7 @@ export const products: Product[] = [
   },
   {
     id: "soft-throw",
+    barcode: "2000000000077",
     name: "Soft cotton throw",
     category: "Home",
     price: 58,
@@ -92,6 +100,7 @@ export const products: Product[] = [
   },
   {
     id: "field-notebook",
+    barcode: "2000000000084",
     name: "Field notebook set",
     category: "Style",
     price: 18,

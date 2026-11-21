@@ -15,6 +15,7 @@ import { colors } from "@/constants/theme";
 import { useShop } from "@/context/shop-context";
 import { products, type Product } from "@/data/products";
 import {
+  BarcodeScanIcon,
   Brand,
   CartButton,
   ProductCard,
@@ -131,6 +132,14 @@ export default function ProductsScreen() {
         <View style={styles.topBar}>
           <Brand />
           <View style={styles.topActions}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Scan a product barcode"
+              onPress={() => router.push("/scan")}
+              style={styles.scanButton}
+            >
+              <BarcodeScanIcon />
+            </Pressable>
             <CartButton />
             <Pressable
               accessibilityRole="button"
@@ -191,6 +200,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+  },
+  scanButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: colors.line,
   },
   signOut: {
     paddingVertical: 9,
