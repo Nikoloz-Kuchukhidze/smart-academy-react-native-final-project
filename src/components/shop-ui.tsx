@@ -58,6 +58,26 @@ export function BarcodeScanIcon({
   );
 }
 
+export function CartIcon({
+  size = 22,
+  color = colors.ink,
+}: {
+  size?: number;
+  color?: string;
+}) {
+  return (
+    <SymbolView
+      name={{
+        ios: "bag",
+        android: "shopping_bag",
+        web: "shopping_bag",
+      }}
+      size={size}
+      tintColor={color}
+    />
+  );
+}
+
 export function BiometricIcon({
   size = 22,
   color = colors.greenDark,
@@ -129,7 +149,7 @@ export function CartButton() {
       onPress={() => router.push("/cart")}
       style={styles.cartButton}
     >
-      <Text style={styles.cartIcon}>▢</Text>
+      <CartIcon />
       {cartCount > 0 && (
         <View style={styles.cartBadge}>
           <Text style={styles.cartBadgeText}>
@@ -355,12 +375,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.line,
-  },
-  cartIcon: {
-    color: colors.ink,
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: "400",
   },
   cartBadge: {
     position: "absolute",
